@@ -55,9 +55,12 @@ let io = require('socket.io')(httpServer, {
 httpServer.listen('3001');
 
 io.on("connection", (socket) => {
+
     console.log('connect')
     online.push('1')
-    socket.emit('online', online.length.toString())
+    io.sockets.emit('online', online.length.toString())
+
+
     socket.on('disconnect', () => {
         console.log('Got disconnect!');
         online.pop()
@@ -74,6 +77,5 @@ io.on("connection", (socket) => {
             message: message,
             color: color
         })
-        io.emit('online', online.length.toString())
     })
 });

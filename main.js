@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let exit = $('#exit-chat');
     let messForm = $('#messForm');
     let loginForm = $('#loginForm');
-    let reg =$('#reg')
+    let reg = $('#reg')
     let nick = document.getElementById('nick')
 
     let login = function () {
@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
         reg.modal('hide')
         join.addClass('d-none')
         exit.removeClass('d-none')
-        nick.innerText= getCookie('name')
+        nick.innerText = getCookie('name')
         $('#123').addClass('d-none')
     }
     let logOut = function () {
@@ -26,21 +26,20 @@ document.addEventListener("DOMContentLoaded", function () {
         var parts = value.split("; " + name + "=");
         if (parts.length == 2) return parts.pop().split(";").shift();
     }
-    let deleteCookie = function (name){
+    let deleteCookie = function (name) {
         document.cookie = `${name}=;max-age=-1`;
     }
 
     console.log(getCookie('name'))
 
 
-
-    exit.click(function (){
+    exit.click(function () {
         deleteCookie('token')
         console.log(getCookie('token'))
         logOut()
     })
 
-    loginForm.submit(function (){
+    loginForm.submit(function () {
         let name = $('#name').val()
         let color = $('#color').val()
         axios.post('http://localhost:3001/', {
@@ -48,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
             color: color
         })
             .then(function (response) {
-                if (response.data !== 'Имя занято'){
+                if (response.data !== 'Имя занято') {
                     console.log(response.data);
                     document.cookie = `token=${response.data.token}`
                     document.cookie = `name=${response.data.name}`
@@ -56,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     login()
 
 
-                }else {
+                } else {
                     alert('Имя занято')
                 }
 
@@ -71,20 +70,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const socket = io.connect("http://localhost:3001/");
 
-    $('#messForm').submit(function (){
-        socket.emit('message', {
-            name: getCookie('name'),
-            message: $('#message').val(),
-            color: getCookie('color')
-        });
-        document.getElementById('message').value = ''
-        return false
+    $('#messForm').submit(function () {
+        if ($('#message').val().length > 200) {
+            alert('Ограничение 200 символов')
+            return false
+        } else {
+            socket.emit('message', {
+                name: getCookie('name'),
+                message: $('#message').val(),
+                color: getCookie('color')
+            });
+            document.getElementById('message').value = ''
+            return false
+        }
+
     })
     socket.on('res', (data) => {
         console.log(data);
         let parent = $('#all_mess')
 
-        if (data.name === getCookie('name')){
+        if (data.name === getCookie('name')) {
             $(`<div class=\'alert alert-${data.color} col-6 ml-auto\'>\n` +
                 '                        <p class="d-flex justify-content-between align-items-center">\n' +
                 `                        <span>${data.name}</span>\n` +
@@ -97,7 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 '                        </p>\n' +
                 '                        \n' +
                 '                    </div>').appendTo(parent)
-        }else {
+        } else {
             $(`<div class=\'alert alert-${data.color} col-6\'>\n` +
                 '                        <p class="d-flex justify-content-between align-items-center">\n' +
                 `                            <span>${data.name}</span>\n` +
@@ -107,10 +112,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 `                        <p>${data.message}</p>\n` +
                 '                    </div>').appendTo(parent)
         }
-        
+
 
     })
-    socket.on('online', (data)=>{
+    socket.on('online', (data) => {
         $('#users-online').text(data)
     })
 

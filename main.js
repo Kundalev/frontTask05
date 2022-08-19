@@ -14,23 +14,36 @@ document.addEventListener("DOMContentLoaded", function () {
         nick.innerText= getCookie('name')
         $('#123').addClass('d-none')
     }
+    let logOut = function () {
+        messForm.addClass('d-none')
+        join.removeClass('d-none')
+        exit.addClass('d-none')
+        $('#123').removeClass('d-none')
+    }
 
     let getCookie = function (name) {
         var value = "; " + document.cookie;
         var parts = value.split("; " + name + "=");
         if (parts.length == 2) return parts.pop().split(";").shift();
     }
+    let deleteCookie = function (name){
+        document.cookie = `${name}=;max-age=-1`;
+    }
 
     console.log(getCookie('name'))
 
 
 
-
+    exit.click(function (){
+        deleteCookie('token')
+        console.log(getCookie('token'))
+        logOut()
+    })
 
     loginForm.submit(function (){
         let name = $('#name').val()
         let color = $('#color').val()
-        axios.post('http://localhost:4000/', {
+        axios.post('http://localhost:3001/', {
             name: name,
             color: color
         })
@@ -56,18 +69,49 @@ document.addEventListener("DOMContentLoaded", function () {
     })
 
 
-    const socket = io.connect("http://localhost:4000/");
+    const socket = io.connect("http://localhost:3001/");
 
     $('#messForm').submit(function (){
         socket.emit('message', {
             name: getCookie('name'),
-            message: $('#message').val()
+            message: $('#message').val(),
+            color: getCookie('color')
         });
         document.getElementById('message').value = ''
         return false
     })
-    socket.on('message1', (socket) => {
-        console.log(socket);
+    socket.on('res', (data) => {
+        console.log(data);
+        let parent = $('#all_mess')
+
+        if (data.name === getCookie('name')){
+            $(`<div class=\'alert alert-${data.color} col-6 ml-auto\'>\n` +
+                '                        <p class="d-flex justify-content-between align-items-center">\n' +
+                `                        <span>${data.name}</span>\n` +
+                '                            <span class="d-none text-right badge badge-dark">Admin</span>\n' +
+                '                        </p>\n' +
+                '                         \n' +
+                '                        <img class="d-none" style="width: 100px; height: 100px; object-fit: cover;" class="" src="https://yt4.ggpht.com/e2vhsw7wa0sO-QSqS3BzRhj-LkmSllra0-AjIi8kpM0PX3A9kfvsXJX8IWUhiEfFCaQXfmfPEoM=s32-c-k-c0x00ffffff-no-rj" alt="">\n' +
+                '                        <p class="mt-2">\n' +
+                `                            ${data.message}` +
+                '                        </p>\n' +
+                '                        \n' +
+                '                    </div>').appendTo(parent)
+        }else {
+            $(`<div class=\'alert alert-${data.color} col-6\'>\n` +
+                '                        <p class="d-flex justify-content-between align-items-center">\n' +
+                `                            <span>${data.name}</span>\n` +
+                '                            <span class="d-none text-right badge badge-dark"></span>\n' +
+                '                        </p>\n' +
+                '                        <img style="width: 100px; height: 100px; object-fit: cover;" class="d-none" src="" alt="">\n' +
+                `                        <p>${data.message}</p>\n` +
+                '                    </div>').appendTo(parent)
+        }
+        
+
+    })
+    socket.on('online', (data)=>{
+        $('#users-online').text(data)
     })
 
 

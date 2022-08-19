@@ -7,11 +7,12 @@ var CryptoJS = require("crypto-js");
 
 
 let names = []
+let online = []
 
 
 
 const host = '127.0.0.1'
-const port = 4000
+const port = 3000
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -51,14 +52,28 @@ let io = require('socket.io')(httpServer, {
     }
 });
 
-httpServer.listen('4000');
+httpServer.listen('3001');
 
 io.on("connection", (socket) => {
+    console.log('connect')
+    online.push('1')
+    socket.emit('online', online.length.toString())
+    socket.on('disconnect', () => {
+        console.log('Got disconnect!');
+        online.pop()
+        io.emit('online', online.length.toString())
+    })
     // send a message to the client
     socket.on('message', (socket) => {
         console.log(socket);
+        let name = socket.name
+        let message = socket.message
+        let color = socket.color
+        io.emit('res', {
+            name: name,
+            message: message,
+            color: color
+        })
+        io.emit('online', online.length.toString())
     })
-    socket.emit('message1',(socket) => {
-        console.log(socket)
-    });
 });
